@@ -8,6 +8,7 @@
 using namespace std;
 using namespace chrono;
 
+
 void clearStream() {
     cin.clear();
     cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
@@ -15,8 +16,11 @@ void clearStream() {
 }
 
 
-int randint(){
-    return rand() % 100;
+int randint(bool randArrSize){
+    if(randArrSize){
+        return rand() % 10 + 10;
+    }
+    return rand() % 198 - 99;
 }
 
 
@@ -39,6 +43,25 @@ void actionMenu(){
 }
 
 //..........................................................................
+struct Time{
+    int rand = 0;
+    int fill = 0;
+    int insert = 0;
+    int erase = 0;
+    int search = 0;
+    int balance = 0;
+    void print(){
+        cout << "\nВремя:";
+        if (rand) cout << "\nЗаполнения случайными числами = " << rand;
+        if (fill) cout << "\nЗаполения числами с клавиатуры = " << fill;
+        if (insert) cout << "\nВставки = " << insert;
+        if (erase) cout << "\nУдаления = " << erase;
+        if (search) cout << "\nПолучения = " << search;
+        if (balance) cout << "\nПроверки на сбалансированность = " << balance;
+        cout << "\n";
+    }
+};
+
 struct Node {
     int key;
     int height = 0;
@@ -61,7 +84,6 @@ struct trunk{
 
 struct Tree {
     Node* root;
-    int sizeCount;
 
     void createTree(){
         root = nullptr;
@@ -126,15 +148,30 @@ struct Tree {
 
     Node* deleteNode(Node* node, int key){
         if(node == nullptr) return nullptr;
+        if(key > node->key) node->right = deleteNode(node->right, key);
         else if(key < node->key) node->left = deleteNode(node->left, key);
-        else if(key > node->key) node->right = deleteNode(node->right, key);
         else{
-            if(node->left == nullptr || node->right == nullptr)
-                node = (node->left == nullptr) ? node->right : node->left;
+            if(node->left == nullptr || node->right == nullptr){
+                if(!node->left && !node->right){
+                    delete node;
+                    return nullptr;
+                }
+                else if(!node->left){
+                    Node* tmp = node->right;
+                    delete node;
+                    return balance(tmp);
+                }
+                else if(!node->right){
+                    Node* tmp = node->left;
+                    delete node;
+                    return balance(tmp);
+                }
+            }
             else{
-                Node* maxInLeft = getMaxTree(node->left);
-                node->key = maxInLeft->key;
-                node->left = deleteNode(node->left, maxInLeft->key);
+                Node* tmp = getMaxTree(node->left);
+                node->key = tmp->key;
+                node->left = deleteNode(node->left, tmp->key);
+                return balance(node);
             }
         }
         if(node != nullptr){
@@ -152,10 +189,10 @@ struct Tree {
     }
 
     Node* search(int key, Node* ptr){
-        if (ptr == nullptr) return ptr;
+        if (ptr == nullptr) return nullptr;
         if(key == ptr->key) return ptr;
-        else if (key < ptr->key) search(key, ptr->left);
-        else search(key, ptr->right);
+        else if (key < ptr->key) return search(key, ptr->left);
+        else return search(key, ptr->right);
         return ptr;
     }
 
@@ -173,27 +210,18 @@ struct Tree {
         return ptr;
     }
 
-    void sizeTree(Node* ptr) {
-        sizeCount = 0;
-        if (ptr){
-            sizeCount++;
-            sizeTree(root->left);
-            sizeTree(root->right);
-        }
-    }
-
-    void showTrunk(trunk* p, int &count){
+    void showTrunk(trunk* p, int &count, ofstream &fout){
         if(p == nullptr) return;
-        showTrunk(p->prev, count);
+        showTrunk(p->prev, count, fout);
         count++;
-        cout << p->str;
+        fout << p->str;
     }
 
-    void printTree(Node* node, trunk* prev, bool isRight){
+    void printTree(Node* node, trunk* prev, bool isRight, ofstream &fout){
         if(node == nullptr) return;
         string prev_str = "    ";
         trunk* tmp = new trunk(prev, prev_str);
-        printTree(node->right, tmp, true);
+        printTree(node->right, tmp, true, fout);
         if (!prev)
             tmp->str = "-->";
         else if (isRight) {
@@ -205,12 +233,12 @@ struct Tree {
             prev->str = prev_str;
         }
         int count = 0;
-        showTrunk(tmp, count);
-        cout << node->key << "\n";
+        showTrunk(tmp, count, fout);
+        fout << "{" << node->key << "}" << "\n";
         if (prev)
             prev->str = prev_str;
         tmp->str = "   |";
-        printTree(node->left, tmp, false);
+        printTree(node->left, tmp, false, fout);
     }
 
     void directBypass(Node* node, bool &isBalance, bool balancing) {
@@ -226,7 +254,7 @@ struct Tree {
     void fillTree(int numOfNodes, int* arr, bool rand){
         if(rand){
             for (int i = 0; i < numOfNodes; i++){
-                root = insert(root, randint());
+                root = insert(root, randint(false));
             }
         }
         else{
@@ -259,35 +287,173 @@ int fillArray(int* &arr){
 }
 
 
+int randArray(int &sizeArr, int* &arr){
+    int  *rez = new int[sizeArr];
+    for (int i = 0; i < sizeArr; i++){
+        *(rez + i) = randint(false);
+    }
+    delete[] arr;
+    arr = rez;
+    return sizeArr;
+}
+
+
 void clearArray(int* &arr){
     int  *rez = new int[0];
     delete[] arr;
     arr = rez;
 }
 
-//.......................................................
-struct Time{
-    int rand = 0;
-    int fill = 0;
-    int insert = 0;
-    int erase = 0;
-    int search = 0;
-    int balance = 0;
-    void print(){
-        cout << "\nВремя:";
-        if (rand) cout << "\nЗаполнения случайными числами = " << rand;
-        if (fill) cout << "\nЗаполения числами с клавиатуры = " << fill;
-        if (insert) cout << "\nВставки = " << insert;
-        if (erase) cout << "\nУдаления = " << erase;
-        if (search) cout << "\nПолучения = " << search;
-        if (balance) cout << "\nПроверки на сбалансированность = " << balance;
+//................................................................
+void fillAndLogTree(Tree &avl, int numOfNodes, int* arr, ofstream &taskAns){
+    for (int i = 0; i < numOfNodes; i++){
+        avl.root = avl.insert(avl.root, arr[i]);
+        avl.printTree(avl.root, nullptr, true, taskAns);
+        taskAns << "\n\n";
     }
-};
+}
+
+Node* balance(Tree &avl, Node* node, ofstream &taskAns){
+    avl.updHeight(node);
+    if(avl.getBalance(node) == 2){
+        if(avl.getBalance(node->right) < 0)
+            avl.rotateRight(node->right);
+        avl.rotateLeft(node);
+    }
+    if(avl.getBalance(node) == -2){
+        if(avl.getBalance(node->left) > 0)
+            avl.rotateLeft(node->left);
+        avl.rotateRight(node);
+    }
+    return node;
+}
 
 
+Node* insertAndLog(Tree &avl, Node* node, int key, ofstream &taskAns){
+    if(!node) return new Node(key);
+    if(key < node->key)
+        node->left = avl.insert(node->left,key);
+    else
+        node->right = avl.insert(node->right,key);
+    avl.printTree(avl.root, nullptr, true, taskAns);
+    taskAns << "\n\n";
+    return balance(avl, node, taskAns);
+}
+
+
+Node* deleteNode(Tree &avl, Node* node, int key, ofstream &taskAns){
+    if(node == nullptr) return nullptr;
+    if(key > node->key) node->right = deleteNode(avl, node->right, key, taskAns);
+    else if(key < node->key) node->left = deleteNode(avl, node->left, key, taskAns);
+    else{
+        if(node->left == nullptr || node->right == nullptr){
+            if(!node->left && !node->right){
+                delete node;
+                return nullptr;
+            }
+            else if(!node->left){
+                Node* tmp = node->right;
+                delete node;
+                return balance(avl, tmp, taskAns);
+            }
+            else if(!node->right){
+                Node* tmp = node->left;
+                delete node;
+                return balance(avl, tmp, taskAns);
+            }
+        }
+        else{
+            Node* tmp = avl.getMaxTree(node->left);
+            node->key = tmp->key;
+            node->left = deleteNode(avl, node->left, tmp->key, taskAns);
+            return balance(avl, node, taskAns);
+        }
+    }
+    if(node != nullptr){
+        avl.updHeight(node);
+    }
+    avl.printTree(avl.root, nullptr, true, taskAns);
+    taskAns << "\n\n";
+    return balance(avl, node, taskAns);
+}
+
+
+void completeTask(ofstream &task, ofstream &taskKey, ofstream &taskAns, int* &arr, Tree &avl, Time &time){
+    avl.createTree();
+    int numOfNodes;
+    short choise;
+    short key;
+    cout << "\nВведите количество вариантов: ";
+    cin >> choise;
+    if (!cin.good()) {
+        cout << "Неправильно введено число.\n";
+        system("pause");
+        clearStream();
+        return;
+    }
+    task.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\output_task.txt");
+    taskKey.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\output_key.txt");
+    taskAns.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\output_ans.txt");
+    if (!task.is_open() || !taskKey.is_open() || !taskAns.is_open()){
+        cout << "Ошибка открытия файла!!!";
+        system("pause");
+        task.close();
+        taskKey.close();
+        taskAns.close();
+        return;
+    }
+    for (int i = 1; i <= choise; i++){
+        clearArray(arr);
+        avl.deleteTree(avl.root);
+        avl.createTree();
+        task << "ВАРИАНТ № " << i << "\n\n";
+        taskKey << "ВАРИАНТ № " << i << "\n";
+        taskAns << "ВАРИАНТ № " << i << "\n";
+
+        task << "Задание № 1\nСоздать АВЛ-дерево из следующего массива:";
+        taskKey << "Задание № 1\n";
+        taskAns << "Задание № 1\n";
+        numOfNodes = randint(true);
+        randArray(numOfNodes, arr);
+        for (int j = 0; j < numOfNodes; j++){
+            task << " " << arr[j];
+        }
+        fillAndLogTree(avl, numOfNodes, arr, taskAns);
+        taskAns << "Ответ:\n";
+        avl.printTree(avl.root, nullptr, true, taskAns);
+        taskAns << "\n";
+        avl.printTree(avl.root, nullptr, true, taskKey);
+
+        key = randint(true);
+        task << "\nЗадание № 2\nВставить в дерево элемент с ключом: " << key << "\n";
+        taskKey << "\nЗадание № 2\n";
+        taskAns << "\nЗадание № 2\n";
+        avl.root = insertAndLog(avl, avl.root, key, taskAns);
+        taskAns << "Ответ:\n";
+        avl.printTree(avl.root, nullptr, true, taskAns);
+        taskAns << "\n";
+        avl.printTree(avl.root, nullptr, true, taskKey);
+
+        key = randint(false);
+        task << "Задание № 3\nУдалить из дерева элемент с ключом: " << key << "\n\n";
+        taskKey << "\nЗадание № 3\n";
+        taskAns << "\nЗадание № 3\n";
+        avl.root = deleteNode(avl, avl.root, arr[key], taskAns);
+        taskAns << "Ответ:\n";
+        avl.printTree(avl.root, nullptr, true, taskAns);
+        avl.printTree(avl.root, nullptr, true, taskKey);
+        taskKey << "\n\n";
+        taskAns << "\n\n";
+    }
+    task.close();
+    taskKey.close();
+    taskAns.close();
+}
+//.................................................................
 int main() {
     SetConsoleOutputCP(CP_UTF8);
     srand(time(NULL));
+    ofstream fout, task,taskKey, taskAns;
     time_point<steady_clock, duration<__int64, ratio<1, 1000000000>>> start, end;
     nanoseconds result;
     Tree avl;
@@ -296,10 +462,11 @@ int main() {
     short choise;
     bool isBalance = true;
     int* arr = new int [0];
-
     while(true){
+        system("cls");
         mainMenu();
         cin >> choise;
+        clearStream();
         switch(choise){
             case 1:
                 avl.deleteTree(avl.root);
@@ -309,6 +476,7 @@ int main() {
                      "1) Случайные числа\n" <<
                      "2) Ручной ввод\n-->> ";
                 cin >> choise;
+                clearStream();
                 if(choise == 1){
                     cout << "\nВведите количество элементов: ";
                     cin >> choise;
@@ -327,21 +495,37 @@ int main() {
                     result = duration_cast<nanoseconds>(end - start);
                     time.fill = result.count();
                 }
-                else cout << "\nНеправильно введен номер!\n";
+                else {
+                    cout << "\nНеправильно введен номер!\n";
+                    system("pause");
+                }
                 break;
             case 2:
-                cout << "\n\n";
-                avl.printTree(avl.root, nullptr, true);
+                fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
+                if (!fout.is_open()) {
+                    cout << "Ошибка открытия файла!!!";
+                    fout.close();
+                    break;
+                }
+                else{
+                    avl.printTree(avl.root, nullptr, true, fout);
+                    fout.close();
+                }
                 break;
             case 3:
                 actionMenu();
                 cin >> choise;
+                clearStream();
                 switch(choise){
                     case 1:
                         cout << "\nВведите ключ: ";
                         cin >> choise;
+                        if (!cin.good()) {
+                            clearStream();
+                            break;
+                        }
                         start = steady_clock::now();
-                        avl.insert(avl.root, choise);
+                        avl.root = avl.insert(avl.root, choise);
                         end = steady_clock::now();
                         result = duration_cast<nanoseconds>(end - start);
                         time.insert = result.count();
@@ -349,6 +533,10 @@ int main() {
                     case 2:
                         cout << "\nВведите ключ: ";
                         cin >> choise;
+                        if (!cin.good()) {
+                            clearStream();
+                            break;
+                        }
                         start = steady_clock::now();
                         avl.root = avl.deleteNode(avl.root, choise);
                         end = steady_clock::now();
@@ -356,16 +544,25 @@ int main() {
                         time.erase = result.count();
                         break;
                     case 3:
+                        Node* adress;
                         cout << "\nВведите ключ: ";
                         cin >> choise;
+                        if (!cin.good()) {
+                            clearStream();
+                            break;
+                        }
                         start = steady_clock::now();
-                        cout << avl.search(choise, avl.root);
+                        adress = avl.search(choise, avl.root);
                         end = steady_clock::now();
                         result = duration_cast<nanoseconds>(end - start);
                         time.search = result.count();
+                        if (adress) cout << "\nАдрес элемента: " << adress << "\n";
+                        else cout << "\nЭлемент не найден в дереве.\n";
+                        system("pause");
                         break;
                     default:
                         cout << "\nНеправильно введен номер!\n";
+                        system("pause");
                 }
                 break;
             case 4:
@@ -376,15 +573,21 @@ int main() {
                 time.balance = result.count();
                 if (isBalance){
                     cout << "\nДерево сбалансированно!\n";
+                    system("pause");
                 }
-                else cout << "\nДерево не сбалансированно!\n";
+                else {
+                    cout << "\nДерево не сбалансированно!\n";
+                    system("pause");
+                }
                 isBalance = true;
                 break;
             case 5:
-
+                completeTask(task, taskKey, taskAns, arr, avl, time);
+                clearArray(arr);
                 break;
             case 6:
                 time.print();
+                system("pause");
                 break;
             case 7:
                 system("cls");
@@ -397,8 +600,8 @@ int main() {
                 break;
             default:
                 cout << "\nНеправильно введен номер!\n";
+                system("pause");
         }
-        cout << "\n";
     }
     return 0;
 }
