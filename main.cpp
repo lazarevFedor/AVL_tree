@@ -18,7 +18,7 @@ void clearStream() {
 
 int randint(bool randArrSize){
     if(randArrSize){
-        return rand() % 1589 + 10;
+        return rand() % 15 + 10;
     }
     return rand() % 198 - 99;
 }
@@ -26,13 +26,11 @@ int randint(bool randArrSize){
 
 void mainMenu(){
     cout << "1) Сформировать дерево\n" <<
-         "2) Вывести дерево\n" <<
-         "3) Действия с деревом\n" <<
-         "4) Проверка на сбалансированность\n" <<
-         "5) Генерация заданий\n" <<
-         "6) Время выполнения\n" <<
-         "7) Очистка экрана\n" <<
-         "8) Выход\n-->> ";
+         "2) Действия с деревом\n" <<
+         "3) Проверка на сбалансированность\n" <<
+         "4) Генерация заданий\n" <<
+         "5) Время выполнения\n" <<
+         "6) Выход\n-->> ";
 }
 
 
@@ -67,7 +65,7 @@ struct Node {
     int height = 0;
     Node* left;
     Node* right;
-    Node(int inputData) {
+    Node(int inputData){
         key = inputData;
         left = right = nullptr;
     }
@@ -505,18 +503,6 @@ int main() {
                 }
                 break;
             case 2:
-                fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
-                if (!fout.is_open()) {
-                    cout << "Ошибка открытия файла!!!";
-                    fout.close();
-                    break;
-                }
-                else{
-                    avl.printTree(avl.root, nullptr, true, fout);
-                    fout.close();
-                }
-                break;
-            case 3:
                 actionMenu();
                 cin >> choise;
                 clearStream();
@@ -589,7 +575,7 @@ int main() {
                         system("pause");
                 }
                 break;
-            case 4:
+            case 3:
                 start = steady_clock::now();
                 avl.directBypass(avl.root, isBalance, false);
                 end = steady_clock::now();
@@ -600,23 +586,20 @@ int main() {
                     system("pause");
                 }
                 else {
-                    cout << "\nДерево не сбалансированно!\n";
+                    cout << "\nДерево не сбалансированно.\n";
                     system("pause");
                 }
                 isBalance = true;
                 break;
-            case 5:
+            case 4:
                 completeTask(task, taskKey, taskAns, arr, avl, time);
                 clearArray(arr);
                 break;
-            case 6:
+            case 5:
                 time.print();
                 system("pause");
                 break;
-            case 7:
-                system("cls");
-                break;
-            case 8:
+            case 6:
                 delete [] arr;
                 arr = nullptr;
                 avl.deleteTree(avl.root);
