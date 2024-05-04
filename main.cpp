@@ -18,7 +18,7 @@ void clearStream() {
 
 int randint(bool randArrSize){
     if(randArrSize){
-        return rand() % 10 + 10;
+        return rand() % 1589 + 10;
     }
     return rand() % 198 - 99;
 }
@@ -79,6 +79,12 @@ struct trunk{
     trunk(trunk* prevAdr, string prev_str){
         str = prev_str;
         prev = prevAdr;
+    }
+    void showTrunk(trunk* p, int &count, ofstream &fout){
+        if(p == nullptr) return;
+        showTrunk(p->prev, count, fout);
+        count++;
+        fout << p->str;
     }
 };
 
@@ -210,13 +216,6 @@ struct Tree {
         return ptr;
     }
 
-    void showTrunk(trunk* p, int &count, ofstream &fout){
-        if(p == nullptr) return;
-        showTrunk(p->prev, count, fout);
-        count++;
-        fout << p->str;
-    }
-
     void printTree(Node* node, trunk* prev, bool isRight, ofstream &fout){
         if(node == nullptr) return;
         string prev_str = "    ";
@@ -233,7 +232,7 @@ struct Tree {
             prev->str = prev_str;
         }
         int count = 0;
-        showTrunk(tmp, count, fout);
+        tmp->showTrunk(tmp, count, fout);
         fout << "{" << node->key << "}" << "\n";
         if (prev)
             prev->str = prev_str;
@@ -313,21 +312,6 @@ void fillAndLogTree(Tree &avl, int numOfNodes, int* arr, ofstream &taskAns){
     }
 }
 
-Node* balance(Tree &avl, Node* node, ofstream &taskAns){
-    avl.updHeight(node);
-    if(avl.getBalance(node) == 2){
-        if(avl.getBalance(node->right) < 0)
-            avl.rotateRight(node->right);
-        avl.rotateLeft(node);
-    }
-    if(avl.getBalance(node) == -2){
-        if(avl.getBalance(node->left) > 0)
-            avl.rotateLeft(node->left);
-        avl.rotateRight(node);
-    }
-    return node;
-}
-
 
 Node* insertAndLog(Tree &avl, Node* node, int key, ofstream &taskAns){
     if(!node) return new Node(key);
@@ -337,7 +321,7 @@ Node* insertAndLog(Tree &avl, Node* node, int key, ofstream &taskAns){
         node->right = avl.insert(node->right,key);
     avl.printTree(avl.root, nullptr, true, taskAns);
     taskAns << "\n\n";
-    return balance(avl, node, taskAns);
+    return avl.balance(node);
 }
 
 
@@ -354,19 +338,19 @@ Node* deleteNode(Tree &avl, Node* node, int key, ofstream &taskAns){
             else if(!node->left){
                 Node* tmp = node->right;
                 delete node;
-                return balance(avl, tmp, taskAns);
+                return avl.balance(tmp);
             }
             else if(!node->right){
                 Node* tmp = node->left;
                 delete node;
-                return balance(avl, tmp, taskAns);
+                return avl.balance(tmp);
             }
         }
         else{
             Node* tmp = avl.getMaxTree(node->left);
             node->key = tmp->key;
             node->left = deleteNode(avl, node->left, tmp->key, taskAns);
-            return balance(avl, node, taskAns);
+            return avl.balance(node);
         }
     }
     if(node != nullptr){
@@ -374,7 +358,7 @@ Node* deleteNode(Tree &avl, Node* node, int key, ofstream &taskAns){
     }
     avl.printTree(avl.root, nullptr, true, taskAns);
     taskAns << "\n\n";
-    return balance(avl, node, taskAns);
+    return avl.balance(node);
 }
 
 
@@ -424,7 +408,7 @@ void completeTask(ofstream &task, ofstream &taskKey, ofstream &taskAns, int* &ar
         taskAns << "\n";
         avl.printTree(avl.root, nullptr, true, taskKey);
 
-        key = randint(true);
+        key = randint(false);
         task << "\nЗадание № 2\nВставить в дерево элемент с ключом: " << key << "\n";
         taskKey << "\nЗадание № 2\n";
         taskAns << "\nЗадание № 2\n";
@@ -434,8 +418,8 @@ void completeTask(ofstream &task, ofstream &taskKey, ofstream &taskAns, int* &ar
         taskAns << "\n";
         avl.printTree(avl.root, nullptr, true, taskKey);
 
-        key = randint(false);
-        task << "Задание № 3\nУдалить из дерева элемент с ключом: " << key << "\n\n";
+        key = randint(true);
+        task << "Задание № 3\nУдалить из дерева элемент с ключом: " << arr[key] << "\n\n";
         taskKey << "\nЗадание № 3\n";
         taskAns << "\nЗадание № 3\n";
         avl.root = deleteNode(avl, avl.root, arr[key], taskAns);
@@ -485,15 +469,35 @@ int main() {
                     end = steady_clock::now();
                     result = duration_cast<nanoseconds>(end - start);
                     time.rand = result.count();
+                    fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
+                    if (!fout.is_open()) {
+                        cout << "Ошибка открытия файла!!!";
+                        fout.close();
+                        break;
+                    }
+                    else{
+                        avl.printTree(avl.root, nullptr, true, fout);
+                        fout.close();
+                    }
                 }
                 else if(choise == 2){
-                    cout << "\nЗаполните массив:\n";
+                    cout << "\nЗаполните массив: ";
                     choise = fillArray(arr);
                     start = steady_clock::now();
                     avl.fillTree(choise, arr, false);
                     end = steady_clock::now();
                     result = duration_cast<nanoseconds>(end - start);
                     time.fill = result.count();
+                    fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
+                    if (!fout.is_open()) {
+                        cout << "Ошибка открытия файла!!!";
+                        fout.close();
+                        break;
+                    }
+                    else{
+                        avl.printTree(avl.root, nullptr, true, fout);
+                        fout.close();
+                    }
                 }
                 else {
                     cout << "\nНеправильно введен номер!\n";
@@ -529,6 +533,16 @@ int main() {
                         end = steady_clock::now();
                         result = duration_cast<nanoseconds>(end - start);
                         time.insert = result.count();
+                        fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
+                        if (!fout.is_open()) {
+                            cout << "Ошибка открытия файла!!!";
+                            fout.close();
+                            break;
+                        }
+                        else{
+                            avl.printTree(avl.root, nullptr, true, fout);
+                            fout.close();
+                        }
                         break;
                     case 2:
                         cout << "\nВведите ключ: ";
@@ -542,6 +556,16 @@ int main() {
                         end = steady_clock::now();
                         result = duration_cast<nanoseconds>(end - start);
                         time.erase = result.count();
+                        fout.open("C:\\Users\\fedos\\CLionProjects\\AVL-tree\\Tree.txt");
+                        if (!fout.is_open()) {
+                            cout << "Ошибка открытия файла!!!";
+                            fout.close();
+                            break;
+                        }
+                        else{
+                            avl.printTree(avl.root, nullptr, true, fout);
+                            fout.close();
+                        }
                         break;
                     case 3:
                         Node* adress;
