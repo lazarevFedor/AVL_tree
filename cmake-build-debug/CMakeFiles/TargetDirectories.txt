@@ -1,3 +1,0 @@
-C:/Users/fedos/CLionProjects/AVL-tree/cmake-build-debug/CMakeFiles/AVL_tree.dir
-C:/Users/fedos/CLionProjects/AVL-tree/cmake-build-debug/CMakeFiles/edit_cache.dir
-C:/Users/fedos/CLionProjects/AVL-tree/cmake-build-debug/CMakeFiles/rebuild_cache.dir
